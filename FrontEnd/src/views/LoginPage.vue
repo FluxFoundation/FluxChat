@@ -2,6 +2,7 @@
 
 
   <div class="flex flex-col h-screen justify-center items-center backGroundMain">
+    
     <div v-if="pwDif" role="alert" class="alert alert-error mb-5">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -9,6 +10,15 @@
       </svg>
       <span class="font-bold">Error! Your password are differents</span>
     </div>
+
+    <div v-if="apiError" role="alert" class="alert alert-error mb-5 flex items-center bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span class="font-bold">{{ apiError }}</span>
+    </div>
+
     <div class=" flex flex-col items-center w-120 h-140 rounded-xl bg-white">
       <div v-if="isLogin" class="flex flex-col items-center justify-center h-screen">
         <h2 class="mb-8 text-3xl font-bold text-black">Login</h2>
@@ -21,7 +31,7 @@
                 <circle cx="12" cy="7" r="4"></circle>
               </g>
             </svg>
-            <input type="text" class=" placeholder:opacity-50" required placeholder="Type your username"
+            <input v-model="user" type="text" class=" placeholder:opacity-50" required placeholder="Type your username"
               pattern="[A-Za-z][A-Za-z0-9\-]*" minlength="3" maxlength="30" title="Only letters, numbers or dash" />
           </label>
           <p class="validator-hint hidden">
@@ -40,7 +50,7 @@
                 <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
               </g>
             </svg>
-            <input type="password" required placeholder="Password" minlength="8"
+            <input v-model="pw" type="password" required placeholder="Password" minlength="8"
               pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
               title="Must be more than 8 characters, including number, lowercase letter, uppercase letter"
               class=" placeholder:opacity-50" />
@@ -52,12 +62,14 @@
           </p>
         </div>
         <button
-          class="rounded-xl mt-7 buttonColor text-white font-bold pl-8 pr-8 pt-1 pb-1 hover:cursor-pointer">Login</button>
+         @click="login" class="rounded-xl mt-7 buttonColor text-white font-bold pl-8 pr-8 pt-1 pb-1 hover:cursor-pointer">Login</button>
         <p class="text-black pt-3 text-xs">If you haven't an account <a
             class="text-orange-500 hover:text-purple-600 hover:underline hover:cursor-pointer"
             @click="changeLogin">click here</a></p>
+
       </div>
       <div v-if="!isLogin" class="flex flex-col items-center justify-center h-screen">
+
         <h2 class="mb-8 text-3xl font-bold text-black">Sign up</h2>
         <div>
           <label for="" class="text-xs font-bold text-black">Username:</label>
@@ -68,7 +80,7 @@
                 <circle cx="12" cy="7" r="4"></circle>
               </g>
             </svg>
-            <input type="text" class=" placeholder:opacity-50" required placeholder="Type your username"
+            <input v-model="user" type="text" class=" placeholder:opacity-50" required placeholder="Type your username"
               pattern="[A-Za-z][A-Za-z0-9\-]*" minlength="3" maxlength="30" title="Only letters, numbers or dash" />
           </label>
           <p class="validator-hint hidden">
@@ -120,14 +132,12 @@
             <br />At least one number <br />At least one lowercase letter <br />At least one uppercase letter
           </p>
         </div>
-        <button @click="pwCheck"
-          class="rounded-xl mt-7 buttonColor text-white font-bold pl-8 pr-8 pt-1 pb-1 hover:cursor-pointer">Sign
+        <button @click="handleSignup"
+        class="rounded-xl mt-7 buttonColor text-white font-bold pl-8 pr-8 pt-1 pb-1 hover:cursor-pointer">Sign
           up</button>
         <p class="text-black pt-3 text-xs">If you have an account <a
             class="text-orange-500 hover:text-purple-600 hover:underline hover:cursor-pointer"
             @click="changeLogin">click here</a></p>
-
-
       </div>
     </div>
 
@@ -146,6 +156,106 @@ const isLogin = ref(true);
 const pwDif = ref(false);
 const pw = ref('');
 const confPw = ref('');
+const user = ref('');
+const apiError = ref('');
+
+
+const usernamePattern = /^[A-Za-z][A-Za-z0-9-]{2,29}$/;
+const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+
+async function handleSignup() {
+  apiError.value = '';
+  pwCheck();
+
+  if (!user.value || !pw.value || !confPw.value) {
+    return;
+  }
+
+  if (!usernamePattern.test(user.value)) {
+    return;
+  }
+
+  if (!passwordPattern.test(pw.value)) {
+    return;
+  }
+
+  if (pw.value !== confPw.value) {
+    return;
+  }
+  let obj = {"username": user.value, "password": pw.value};
+  let json = JSON.stringify(obj);
+
+  try {
+    const response = await fetch('/api/v1/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: json,
+        redirect: 'follow'
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        apiError.value = data.message || 'Sign up failed';
+        return;
+      }
+
+
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl; 
+        return;
+      }
+  } catch (err) {
+    console.error(err);
+    apiError.value = 'Network error. Please try again.';
+  }
+}
+
+async function login() {
+  apiError.value = '';
+  if (!user.value || !pw.value) {
+    return;
+  }
+
+  if (!usernamePattern.test(user.value)) {
+    return;
+  }
+
+  if (!passwordPattern.test(pw.value)) {
+    return;
+  }
+
+  let obj = {"username": user.value, "password": pw.value};
+  let json = JSON.stringify(obj);
+
+  try {
+    const response = await fetch('/api/v1/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: json,
+        redirect: 'follow'
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        apiError.value = data.message || 'Login failed';
+        return;
+      }
+
+
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl; 
+        return;
+      }
+  } catch (err) {
+    console.error(err);
+    apiError.value = 'Network error. Please try again.';
+  }
+}
 
 function changeLogin() {
 
