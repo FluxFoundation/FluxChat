@@ -176,6 +176,7 @@ function pwCheck() {
 </script>
 
 <style scoped>
+
 .backGroundMain {
 
   background-image: linear-gradient(305deg, orangered, purple);
@@ -184,5 +185,10 @@ function pwCheck() {
 .buttonColor {
 
   background-image: linear-gradient(to right, orangered, red, purple);
+}
+
+.buttonColor:active{
+
+  background: purple;
 }
 </style>
