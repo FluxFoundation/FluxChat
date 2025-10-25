@@ -1,2 +1,8 @@
 @import "tailwindcss";
-@plugin "daisyui"
+@plugin "daisyui";
+
+
+.backGroundMain {
+
+  background-image: linear-gradient(305deg, orangered, purple);
+}
