@@ -3,26 +3,18 @@
 
   <div class="flex flex-col h-screen justify-center items-center backGroundMain">
 
-    <div v-if="pwDif" role="alert" class="alert alert-error mb-5">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <span class="font-bold">Error! Your password are differents</span>
-    </div>
-
-    <div v-if="apiError" role="alert"
-      class="alert alert-error mb-5 flex items-center bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <span class="font-bold">{{ apiError }}</span>
-    </div>
 
     <div class=" flex flex-col items-center w-120 h-140 rounded-xl bg-white">
-      <form v-if="isLogin" class="flex flex-col items-center justify-center h-screen">
+      <form v-if="isLogin" class="flex flex-col items-center justify-center h-screen" @submit.prevent="login">
         <h2 class="mb-8 text-3xl font-bold text-black">Login</h2>
+        <div v-if="apiError" role="alert"
+          class="alert alert-error mb-5 flex items-center bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="font-bold">{{ apiError }}</span>
+        </div>
         <div>
           <label for="" class="text-xs font-bold text-black">Username:</label>
           <label class="input validator bg-white text-black border-gray-200">
@@ -62,16 +54,31 @@
             <br />At least one number <br />At least one lowercase letter <br />At least one uppercase letter
           </p>
         </div>
-        <button @click="login"
+        <button type="submit"
           class="rounded-xl mt-7 buttonColor text-white font-bold pl-8 pr-8 pt-1 pb-1 hover:cursor-pointer">Login</button>
         <p class="text-black pt-3 text-xs">If you haven't an account <a
             class="text-orange-500 hover:text-purple-600 hover:underline hover:cursor-pointer"
             @click="changeLogin">click here</a></p>
 
         </form>
-      <form v-if="!isLogin" class="flex flex-col items-center justify-center h-screen">
+      <form v-if="!isLogin" class="flex flex-col items-center justify-center h-screen" @submit.prevent="handleSignup">
 
         <h2 class="mb-8 text-3xl font-bold text-black">Sign up</h2>
+        <div v-if="pwDif" role="alert" class="alert alert-error mb-5">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="font-bold">Error! Your password are differents</span>
+        </div>
+        <div v-if="apiError" role="alert"
+          class="alert alert-error mb-5 flex items-center bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="font-bold">{{ apiError }}</span>
+        </div>
         <div>
 
 
@@ -138,7 +145,7 @@
             </p>
           </div>
         </div>
-        <button @click="handleSignup"
+        <button type="submit"
           class="rounded-xl mt-7 buttonColor text-white font-bold pl-8 pr-8 pt-1 pb-1 hover:cursor-pointer">Sign
           up</button>
         <p class="text-black pt-3 text-xs">If you have an account <a
@@ -193,17 +200,16 @@ async function handleSignup() {
   const json = JSON.stringify(obj);
 
   try {
-    const response = await fetch('/api/v1/signup', {
+    const response = await fetch('http://127.0.0.1:8000/api/v1/signup', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: json,
-      redirect: 'follow'
     });
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!response.ok || data.message != "signup successfull" ) {
       apiError.value = data.message || 'Sign up failed';
       return;
     }
@@ -237,7 +243,7 @@ async function login() {
   const json = JSON.stringify(obj);
 
   try {
-    const response = await fetch('/api/v1/login', {
+    const response = await fetch('http://127.0.0.1:8000/api/v1/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -247,7 +253,7 @@ async function login() {
     });
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!response.ok || data.message != "login successfull") {
       apiError.value = data.message || 'Login failed';
       return;
     }

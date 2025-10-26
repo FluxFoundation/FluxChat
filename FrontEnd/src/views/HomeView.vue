@@ -7,10 +7,22 @@ const nikName = ref("Alvaro");
 const lastMsg = ref("Ciao come stai?");
 const image = ref("../../public/images/image_profile_test_1.jpg");
 
+async function logout() {
+  try {
+    const res = await fetch('http://127.0.0.1:8000/api/v1/logout', { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (data.redirectUrl) {
+      window.location.href = data.redirectUrl;
+      return;
+    }
+  } catch (_) {}
+  window.location.href = '/login';
+}
 </script>
 
 <template>
-  <MyNavbar />
+
+<MyNavbar />
   <div class=" flex flex-col pt-20 items-center h-screen backGroundMain">
 
     <ul class="list bg-base-100 rounded-box shadow-md">
@@ -21,6 +33,10 @@ const image = ref("../../public/images/image_profile_test_1.jpg");
 
     </ul>
 
+  </div>
+  <div class="flex flex-col h-screen items-center">
+    <h1>HOMEPAGE</h1>
+    <button class="cursor-pointer border mt-20 px-4 py-2 rounded" @click="logout">LOGOUT</button>
   </div>
 </template>
 
